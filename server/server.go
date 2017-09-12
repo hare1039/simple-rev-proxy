@@ -55,7 +55,7 @@ func outboundHandler(conn net.Conn, id int, forwarder chan<- def.TCPstream) int 
 	for {
 		select {
 		case CS := <-streams[id]:
-			go writeConn(conn, CS.Bytify())
+			go writeConn(conn, CS.Data)
 		case in := <-outboundClientSend:
 			fmt.Println("data: ", in)
 			S := def.TCPstream{
@@ -71,11 +71,13 @@ func outboundHandler(conn net.Conn, id int, forwarder chan<- def.TCPstream) int 
 func outboundServer(netInterface string, toInboundChan chan def.TCPstream) {
 	fmt.Println("outboundServer")
 	outln, err := net.Listen("tcp", netInterface)
-	defer outln.Close()
 	if err != nil {
-		fmt.Println("Error listening to ", err.Error())
+		fmt.Println("Error listening to", err.Error())
 		return
+	} else {
+		fmt.Println("Start reverse proxy on: ", netInterface)
 	}
+	defer outln.Close()
 	counter := 0
 	for {
 		if conn, err := outln.Accept(); err != nil {
@@ -92,11 +94,11 @@ func outboundServer(netInterface string, toInboundChan chan def.TCPstream) {
 func Start(NetInterface string) {
 	fmt.Println("starting server on " + NetInterface)
 	ln, err := net.Listen("tcp", NetInterface)
-	defer ln.Close()
 	if err != nil {
 		fmt.Println("Error on server listening: ", err.Error())
 		os.Exit(2)
 	}
+	defer ln.Close()
 	for {
 		if conn, err := ln.Accept(); err != nil {
 			fmt.Println("Error on server accepting: ", err.Error())
