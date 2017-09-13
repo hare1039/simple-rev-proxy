@@ -2,39 +2,17 @@ package server
 
 import (
 	"fmt"
-	"github.com/hare1039/simple-reverse-proxy/def"
+	"github.com/hare1039/simple-reverse-tunnel/def"
 	"net"
 	"os"
 )
 
 var streams []chan def.TCPstream
 
-func readConn(conn net.Conn, out chan<- []byte) {
-	fmt.Println("readConn")
-	buf := make([]byte, 32)
-	for {
-		reqLen, err := conn.Read(buf)
-		if err != nil {
-			fmt.Println("Error reading: ", err.Error())
-			break
-		} else if reqLen == 0 {
-			break
-		} else {
-			fmt.Println("Sent buf")
-			out <- buf
-		}
-	}
-}
-
-func writeConn(conn net.Conn, buf []byte) {
-	fmt.Println("writeConn")
-	conn.Write(buf)
-}
-
 func inboundHandler(conn net.Conn, inChan <-chan def.TCPstream) {
 	fmt.Println("inboundHandler")
 	clientSend := make(chan []byte)
-	go readConn(conn, clientSend)
+	go def.ReadConn(conn, clientSend)
 	defer conn.Close()
 	for {
 		select {
@@ -42,7 +20,7 @@ func inboundHandler(conn net.Conn, inChan <-chan def.TCPstream) {
 			TCPs := def.ByteToTCPstream(CS)
 			streams[TCPs.Id] <- TCPs
 		case in := <-inChan:
-			go writeConn(conn, in.Bytify())
+			go def.WriteConn(conn, in.Bytify())
 		}
 	}
 }
@@ -50,12 +28,12 @@ func inboundHandler(conn net.Conn, inChan <-chan def.TCPstream) {
 func outboundHandler(conn net.Conn, id int, forwarder chan<- def.TCPstream) int {
 	fmt.Println("outboundHandler")
 	outboundClientSend := make(chan []byte)
-	go readConn(conn, outboundClientSend)
+	go def.ReadConn(conn, outboundClientSend)
 	defer conn.Close()
 	for {
 		select {
 		case CS := <-streams[id]:
-			go writeConn(conn, CS.Data)
+			go def.WriteConn(conn, CS.Data)
 		case in := <-outboundClientSend:
 			fmt.Println("data: ", in)
 			S := def.TCPstream{
@@ -75,7 +53,7 @@ func outboundServer(netInterface string, toInboundChan chan def.TCPstream) {
 		fmt.Println("Error listening to", err.Error())
 		return
 	} else {
-		fmt.Println("Start reverse proxy on: ", netInterface)
+		fmt.Println("Start reverse tunnel on: ", netInterface)
 	}
 	defer outln.Close()
 	counter := 0
