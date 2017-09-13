@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hare1039/simple-reverse-tunnel/def"
 	"net"
+	"os"
 )
 
 var Connections map[int]chan []byte
@@ -13,15 +14,16 @@ func backendHandler(backendTarget string, id int, toDemuxChan chan<- []byte) {
 	conn, err := net.Dial("tcp", backendTarget)
 	if err != nil {
 		fmt.Println("Error connecting to backend:", err.Error())
+		return
 	}
 	defer conn.Close()
-	fmt.Println("Connect to: ", backendTarget)
+	fmt.Println("Connected to:", backendTarget)
 	backendConn := make(chan []byte)
 	go def.ReadConn(conn, backendConn)
 	for {
 		select {
 		case bytes := <-Connections[id]:
-			def.WriteConn(conn, bytes)
+			go def.WriteConn(conn, bytes)
 		case bytes := <-backendConn:
 			TCPs := def.TCPstream{
 				Id:   id,
@@ -34,24 +36,24 @@ func backendHandler(backendTarget string, id int, toDemuxChan chan<- []byte) {
 
 func demuxConn(conn net.Conn, backendTarget string) {
 	fmt.Println("demuxConn")
-	var fromTunnel chan []byte
-	var fromBackendHandler chan []byte
+	fromTunnel := make(chan []byte)
+	fromBackendHandler := make(chan []byte)
 	go def.ReadConn(conn, fromTunnel)
 	for {
 		select {
 		case rawBytes := <-fromTunnel:
-			fmt.Println(rawBytes)
-			TCPs := def.ByteToTCPstream(rawBytes)
-			if ch, ok := Connections[TCPs.Id]; ok {
-				ch <- TCPs.Data
-			} else {
-				ch := make(chan []byte)
-				Connections[TCPs.Id] = ch
-				go backendHandler(backendTarget, TCPs.Id, fromBackendHandler)
-				ch <- TCPs.Data
+			if TCPs, Convertok := def.ByteToTCPstream(rawBytes); Convertok {
+				if ch, ok := Connections[TCPs.Id]; ok {
+					ch <- TCPs.Data
+				} else {
+					ch := make(chan []byte)
+					Connections[TCPs.Id] = ch
+					go backendHandler(backendTarget, TCPs.Id, fromBackendHandler)
+					ch <- TCPs.Data
+				}
 			}
 		case bytes := <-fromBackendHandler:
-			def.WriteConn(conn, bytes)
+			go def.WriteConn(conn, bytes)
 		}
 	}
 }
@@ -60,8 +62,10 @@ func Connect(target string) {
 	conn, err := net.Dial("tcp", target)
 	if err != nil {
 		fmt.Println("Error connecting to:", err.Error())
+		os.Exit(def.EXIT_ERROR_INTERNET)
 	}
 	defer conn.Close()
 
+	Connections = make(map[int]chan []byte)
 	demuxConn(conn, "localhost:9988")
 }

@@ -9,7 +9,7 @@ func (ts *TCPstream) Bytify() []byte {
 	return append([]byte(strconv.Itoa(ts.Id)+"|"), ts.Data...)
 }
 
-func ByteToTCPstream(b []byte) TCPstream {
+func ByteToTCPstream(b []byte) (TCPstream, bool) {
 	id := ""
 	for i, _ := range b {
 		if string(b[i]) != "|" {
@@ -21,12 +21,12 @@ func ByteToTCPstream(b []byte) TCPstream {
 				return TCPstream{
 					Id:   D,
 					Data: b[i+1:],
-				}
+				}, true
 			}
 		}
 	}
 	return TCPstream{
 		Id:   -1,
 		Data: []byte(""),
-	}
+	}, false
 }

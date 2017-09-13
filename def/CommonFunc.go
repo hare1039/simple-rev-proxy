@@ -6,23 +6,18 @@ import (
 )
 
 func ReadConn(conn net.Conn, out chan<- []byte) {
-	fmt.Println("readConn")
-	buf := make([]byte, 32)
 	for {
+		buf := make([]byte, BUF_SIZE)
 		reqLen, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println("Error reading: ", err.Error())
 			break
-		} else if reqLen == 0 {
-			break
-		} else {
-			fmt.Println("Sent buf:", buf)
+		} else if reqLen != 0 {
 			out <- buf
 		}
 	}
 }
 
 func WriteConn(conn net.Conn, buf []byte) {
-	fmt.Println("writeConn")
 	conn.Write(buf)
 }
