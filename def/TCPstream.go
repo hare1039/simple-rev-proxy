@@ -20,6 +20,7 @@ func ByteToTCPstream(b []byte) (TCPstream, bool) {
 		fmt.Println("ByteToTCPstream failed:", err.Error(), "string:", string(b))
 		return TCPstream{}, false
 	} else {
+		fmt.Println("ByteToTCPstream Decoded:", string(TCPs.Data))
 		return TCPs, true
 	}
 

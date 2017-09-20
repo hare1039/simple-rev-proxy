@@ -14,7 +14,7 @@ func ReadConn(conn net.Conn, out chan<- []byte) {
 			fmt.Println("Error reading: ", err.Error())
 			break
 		} else if n > 0 {
-			fmt.Println("readed buffer:", buf)
+			fmt.Println("Readed buffer:", string(buf))
 			out <- buf
 		}
 	}
@@ -64,6 +64,6 @@ func ReadConnInJson(conn net.Conn, out chan<- []byte) {
 }
 
 func WriteConn(conn net.Conn, buf []byte) {
-	fmt.Println("write connection:", buf)
+	fmt.Println("write connection:", string(buf))
 	conn.Write(buf)
 }

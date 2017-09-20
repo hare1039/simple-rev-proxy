@@ -13,6 +13,6 @@ type Config struct {
 }
 
 type TCPstream struct {
-	Id   int    `json:"id"`
-	Data []byte `json:"data"`
+	Id   int    `json:"i"`
+	Data []byte `json:"d"`
 }
