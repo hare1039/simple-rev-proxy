@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		fmt.Println("Please specify `simple-rev-tunnel server [:port]` or `simple-rev-tunnel client [ip:port]`")
 		os.Exit(1)
 	}

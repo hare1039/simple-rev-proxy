@@ -10,7 +10,6 @@ import (
 var Connections map[int]chan []byte
 
 func backendHandler(backendTarget string, id int, toDemuxChan chan<- []byte) {
-	fmt.Println("backendHandler")
 	conn, err := net.Dial("tcp", backendTarget)
 	if err != nil {
 		fmt.Println("Error connecting to backend:", err.Error())
@@ -23,8 +22,10 @@ func backendHandler(backendTarget string, id int, toDemuxChan chan<- []byte) {
 	for {
 		select {
 		case bytes := <-Connections[id]:
+			fmt.Print("client backendHandler ")
 			go def.WriteConn(conn, bytes)
 		case bytes := <-backendConn:
+			fmt.Print("client backendHandler ")
 			TCPs := def.TCPstream{
 				Id:   id,
 				Data: bytes,
@@ -35,13 +36,13 @@ func backendHandler(backendTarget string, id int, toDemuxChan chan<- []byte) {
 }
 
 func demuxConn(conn net.Conn, backendTarget string) {
-	fmt.Println("demuxConn")
 	fromTunnel := make(chan []byte)
-	fromBackendHandler := make(chan []byte)
-	go def.ReadConn(conn, fromTunnel)
+	fromBackendHandler := make(chan []byte, def.CHANNEL_BUF_AMOUNT)
+	go def.ReadConnInJson(conn, fromTunnel)
 	for {
 		select {
 		case rawBytes := <-fromTunnel:
+			fmt.Print("clinet demuxConn ")
 			if TCPs, Convertok := def.ByteToTCPstream(rawBytes); Convertok {
 				if ch, ok := Connections[TCPs.Id]; ok {
 					ch <- TCPs.Data
@@ -53,6 +54,7 @@ func demuxConn(conn net.Conn, backendTarget string) {
 				}
 			}
 		case bytes := <-fromBackendHandler:
+			fmt.Print("clinet demuxConn ")
 			go def.WriteConn(conn, bytes)
 		}
 	}

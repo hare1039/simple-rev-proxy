@@ -1,32 +1,26 @@
 package def
 
 import (
+	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 func (ts *TCPstream) Bytify() []byte {
-	return append([]byte(strconv.Itoa(ts.Id)+"|"), ts.Data...)
+	if bytes, err := json.Marshal(ts); err != nil {
+		fmt.Println("Json bytify failed:", err.Error())
+		return []byte("")
+	} else {
+		return bytes
+	}
 }
 
 func ByteToTCPstream(b []byte) (TCPstream, bool) {
-	id := ""
-	for i, _ := range b {
-		if string(b[i]) != "|" {
-			id = id + string(b[i])
-		} else {
-			if D, err := strconv.Atoi(id); err != nil {
-				fmt.Println("Error on converting id: ", err.Error(), id)
-			} else {
-				return TCPstream{
-					Id:   D,
-					Data: b[i+1:],
-				}, true
-			}
-		}
+	var TCPs TCPstream
+	if err := json.Unmarshal(b, &TCPs); err != nil {
+		fmt.Println("ByteToTCPstream failed:", err.Error(), "string:", string(b))
+		return TCPstream{}, false
+	} else {
+		return TCPs, true
 	}
-	return TCPstream{
-		Id:   -1,
-		Data: []byte(""),
-	}, false
+
 }
