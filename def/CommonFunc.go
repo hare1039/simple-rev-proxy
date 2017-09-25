@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"time"
 )
 
 func ReadConn(conn net.Conn, out chan<- []byte) {
@@ -14,7 +15,7 @@ func ReadConn(conn net.Conn, out chan<- []byte) {
 			fmt.Println("Error reading: ", err.Error())
 			break
 		} else if n > 0 {
-			fmt.Println("Readed buffer:", string(buf))
+			fmt.Println(time.Now(), "Readed buffer:", string(buf))
 			out <- buf
 		}
 	}
@@ -45,7 +46,7 @@ func ReadConnInJson(conn net.Conn, out chan<- []byte) {
 				var sender []byte
 				sender = append(sender, jsonBuf.Bytes()...)
 				out <- sender
-				fmt.Println("send to channel:", string(sender))
+				fmt.Println(time.Now(), "send to channel:", string(sender))
 				jsonBuf.Reset()
 				for i, x := range buf[limit+1:] {
 					if x == []byte("{")[0] {
@@ -64,6 +65,6 @@ func ReadConnInJson(conn net.Conn, out chan<- []byte) {
 }
 
 func WriteConn(conn net.Conn, buf []byte) {
-	fmt.Println("write connection:", string(buf))
+	fmt.Println(time.Now(), "write connection:", string(buf))
 	conn.Write(buf)
 }

@@ -22,7 +22,7 @@ func inboundHandler(conn net.Conn, inChan <-chan def.TCPstream) {
 			}
 		case in := <-inChan:
 			fmt.Print("Server inboundHandler ")
-			go def.WriteConn(conn, in.Bytify())
+			def.WriteConn(conn, in.Bytify())
 		}
 	}
 }
@@ -35,7 +35,7 @@ func outboundHandler(conn net.Conn, id int, forwarder chan<- def.TCPstream) int 
 		select {
 		case CS := <-streams[id]:
 			fmt.Print("server outboundHandler ")
-			go def.WriteConn(conn, CS.Data)
+			def.WriteConn(conn, CS.Data)
 		case in := <-outboundClientSend:
 			fmt.Print("server outboundHandler ")
 			//			fmt.Println("from outboundClientSend:", in)

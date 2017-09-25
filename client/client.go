@@ -23,7 +23,7 @@ func backendHandler(backendTarget string, id int, toDemuxChan chan<- []byte) {
 		select {
 		case bytes := <-Connections[id]:
 			fmt.Print("client backendHandler ")
-			go def.WriteConn(conn, bytes)
+			def.WriteConn(conn, bytes)
 		case bytes := <-backendConn:
 			fmt.Print("client backendHandler ")
 			TCPs := def.TCPstream{
@@ -55,7 +55,7 @@ func demuxConn(conn net.Conn, backendTarget string) {
 			}
 		case bytes := <-fromBackendHandler:
 			fmt.Print("clinet demuxConn ")
-			go def.WriteConn(conn, bytes)
+			def.WriteConn(conn, bytes)
 		}
 	}
 }
