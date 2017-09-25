@@ -60,7 +60,7 @@ func demuxConn(conn net.Conn, backendTarget string) {
 	}
 }
 
-func Connect(target string) {
+func Connect(target string, backend string) {
 	conn, err := net.Dial("tcp", target)
 	if err != nil {
 		fmt.Println("Error connecting to:", err.Error())
@@ -69,5 +69,5 @@ func Connect(target string) {
 	defer conn.Close()
 
 	Connections = make(map[int]chan []byte)
-	demuxConn(conn, "localhost:9988")
+	demuxConn(conn, backend)
 }
